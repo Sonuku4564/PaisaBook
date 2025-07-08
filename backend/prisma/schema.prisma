@@ -1,0 +1,69 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "Enter Database location"
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  name      String
+  email     String     @unique
+  password  String
+  role      Role       @default(ADMIN)
+  createdAt DateTime   @default(now())
+
+  retailers Retailer[]
+  products  Product[]  // Admin-created products
+}
+
+model Retailer {
+  id        Int        @id @default(autoincrement())
+  name      String
+  phone     String?
+  address   String?
+  admin     User       @relation(fields: [adminId], references: [id])
+  adminId   Int
+  orders   Order[] 
+  createdAt DateTime   @default(now())
+}
+
+model Product {
+  id        Int        @id @default(autoincrement())
+  name      String
+  price     Float
+  stock     Int
+  admin     User       @relation(fields: [adminId], references: [id])
+  adminId   Int
+  createdAt DateTime   @default(now())
+
+  orderItems OrderItem[]
+}
+
+model Order {
+  id           Int         @id @default(autoincrement())
+  retailer     Retailer    @relation(fields: [retailerId], references: [id],onDelete: Cascade)
+  retailerId   Int
+  createdAt    DateTime    @default(now())
+  isPaid       Boolean     @default(false)
+  totalAmount  Float       @default(0.0)
+  note        String?
+  orderItems   OrderItem[]
+}
+
+model OrderItem {
+  id         Int      @id @default(autoincrement())
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId    Int
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId  Int
+  quantity   Int
+  price      Float    // price at order time
+}
+
+enum Role {
+  ADMIN
+}
